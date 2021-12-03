@@ -4,7 +4,7 @@ import kotlin.system.exitProcess
 
 class Main {
     companion object {
-        val aocRoot = System.getenv("AOC2021_ROOT")
+        val aocRoot: String = System.getenv("AOC2021_ROOT")
 
         @JvmStatic
         fun main(args: Array<String>) {
