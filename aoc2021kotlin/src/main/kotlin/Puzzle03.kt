@@ -86,8 +86,44 @@ object Puzzle03 {
         println("(p1 answer) power consumption = $powerConsumption") // 775304
     }
 
-    private fun part2(bitStrings: List<String>) {
+    private fun getOxygenGeneratorRating(bitStrings: List<String>): Int {
+        var tempBitStrings = bitStrings.toList()
+        for(i in tempBitStrings.first().indices) {
+            val mostCommonBits = mostCommonBits(tempBitStrings)
+            tempBitStrings = tempBitStrings.filter {
+                it[i] == mostCommonBits[i]
+            }
+            if(tempBitStrings.size == 1) {
+                break
+            }
+        }
+        val oxygenBitArray = tempBitStrings.first().toCharArray().toTypedArray()
+        return bitArrayToInt(oxygenBitArray)
+    }
 
+    private fun getCO2ScrubberRating(bitStrings: List<String>): Int {
+        var tempBitStrings = bitStrings.toList()
+        for(i in tempBitStrings.first().indices) {
+            val leastCommonBits = invertBitArray(mostCommonBits(tempBitStrings))
+            tempBitStrings = tempBitStrings.filter {
+                it[i] == leastCommonBits[i]
+            }
+            if(tempBitStrings.size == 1) {
+                break
+            }
+        }
+        val CO2ScrubberBitArray = tempBitStrings.first().toCharArray().toTypedArray()
+        return bitArrayToInt(CO2ScrubberBitArray)
+    }
+
+    private fun part2(bitStrings: List<String>) {
+        val oxygenGeneratorRating = getOxygenGeneratorRating(bitStrings)
+        val co2ScrubberRating = getCO2ScrubberRating(bitStrings)
+        val lifeSupportRating = oxygenGeneratorRating * co2ScrubberRating
+
+        println("oxygen generator rating = $oxygenGeneratorRating") // 509
+        println("CO2 scrubber rating = $co2ScrubberRating") // 2693
+        println("(p2 answer) life support rating = $lifeSupportRating") // 1370737
     }
 
 
@@ -141,6 +177,20 @@ object Puzzle03 {
             val intFromBits = bitArrayToInt(sampleLeastCommonBits)
             val expected = 9
             assertEquals(intFromBits, expected)
+        }
+
+        @Test
+        fun `oxygen generator rating for sample input`() {
+            val oxygen = getOxygenGeneratorRating(sampleBitStrings)
+            val expected = 23
+            assertEquals(oxygen, expected)
+        }
+
+        @Test
+        fun `co2 scrubber rating for sample input`() {
+            val scrubber = getCO2ScrubberRating(sampleBitStrings)
+            val expected = 10
+            assertEquals(scrubber, expected)
         }
     }
 }
