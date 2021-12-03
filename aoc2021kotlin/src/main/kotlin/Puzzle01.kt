@@ -33,7 +33,8 @@ object Puzzle01 {
     }
 
     fun run() {
-        val input01 = File("//wsl$/Debian/home/yettern/apps/advent-of-code-2021/01/input01").readText().trim()
+        val aocRoot = System.getenv("AOC2021_ROOT")
+        val input01 = File("$aocRoot/other/01/input01").readText().trim()
         val measurements = input01.split("\n").map(Integer::parseInt)
 
         part1(measurements)

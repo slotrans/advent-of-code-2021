@@ -4,7 +4,8 @@ import java.io.File
 
 object Puzzle03 {
     fun run() {
-        val input03 = File("//wsl\$/Debian/home/yettern/apps/advent-of-code-2021/02/input02").readText().trim()
+        val aocRoot = System.getenv("AOC2021_ROOT")
+        val input03 = File("$aocRoot/other/03/input03").readText().trim()
 
         part1()
     }
