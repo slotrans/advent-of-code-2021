@@ -33,8 +33,7 @@ object Puzzle01 {
     }
 
     fun run() {
-        val aocRoot = System.getenv("AOC2021_ROOT")
-        val input01 = File("$aocRoot/other/01/input01").readText().trim()
+        val input01 = File("${Main.aocRoot}/other/01/input01").readText().trim()
         val measurements = input01.split("\n").map(Integer::parseInt)
 
         part1(measurements)

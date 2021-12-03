@@ -13,8 +13,7 @@ data class Instruction(
 
 object Puzzle02 {
     fun run() {
-        val aocRoot = System.getenv("AOC2021_ROOT")
-        val input02 = File("$aocRoot/other/02/input02").readText().trim()
+        val input02 = File("${Main.aocRoot}/other/02/input02").readText().trim()
         val instructions = input02.split("\n").map {
             val (directionString, valueString) = it.split(" ")
             Instruction(
