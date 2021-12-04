@@ -12,7 +12,7 @@ type
     TBitcountArray = array[1..inputLength] of integer;
 
 
-function getBitFrequency(bitStrings: TBitStringList; lastIndex: integer): TBitcountArray;
+function getBitFrequency(bitStrings: TBitStringList): TBitcountArray;
 var
     i, j: integer;
     bitFreqArray: TBitcountArray;
@@ -20,26 +20,27 @@ begin
     for j := 1 to inputLength do
         bitFreqArray[j] := 0;
 
-    for i := 1 to lastIndex do
-        for j := 1 to inputLength do
-            if bitStrings[i][j] = '1' then
-                bitFreqArray[j] := bitFreqArray[j] + 1;
+    for i := 1 to inputCount do
+        if bitStrings[i] <> '' then
+            for j := 1 to inputLength do
+                if bitStrings[i][j] = '1' then
+                    bitFreqArray[j] := bitFreqArray[j] + 1;
 
     getBitFrequency := bitFreqArray;
 end;
 
 
-function getMostCommonBits(bitStrings: TBitStringList; lastIndex: integer): TBitString;
+function getMostCommonBits(bitStrings: TBitStringList; bsCount: integer): TBitString;
 var
     bitFreqArray: TBitcountArray;
     mostCommonBits: TBitString;
     idx: integer;
 begin
-    bitFreqArray := getBitFrequency(bitStrings, lastIndex);
+    bitFreqArray := getBitFrequency(bitStrings);
 
     mostCommonBits := '';
     for idx := 1 to inputLength do
-        if bitFreqArray[idx] / inputCount >= 0.5 then
+        if bitFreqArray[idx] / bsCount >= 0.5 then
             mostCommonBits := concat(mostCommonBits, '1') { setting individual characters ala mostCommonBits[idx] = '1' appears not to work}
         else
             mostCommonBits := concat(mostCommonBits, '0');
@@ -64,6 +65,24 @@ begin
 end;
 
 
+procedure filterByRule(
+    var bitStrings: TBitStringList;
+    var bsCount: integer;
+    ruleBitString: TBitString;
+    bitPosition: integer
+);
+var
+    idx: integer;
+begin
+    for idx := 1 to inputCount do
+        if (bitStrings[idx] <> '') and (bitStrings[idx][bitPosition] <> ruleBitString[bitPosition]) then
+        begin
+            bitStrings[idx] := '';
+            bsCount := bsCount - 1;
+        end;
+end;
+
+
 {**************** main program ****************}
 var
     input03: text;
@@ -75,6 +94,13 @@ var
     epsilonRate: longint;
     powerConsumption: longint;
     errCode: integer;
+
+    tempBitStrings: TBitStringList;
+    tempCount: integer;
+    finalBitString: TBitString;
+    oxygenGenerationRating: longint;
+    co2ScrubberRating: longint;
+    lifeSupportRating: longint;
 
 begin
     assign(input03, 'input03');
@@ -104,6 +130,54 @@ begin
 
     {-- part 2 --}
 
+    tempBitStrings := bitStrings;
+    tempCount := inputCount;
+    for idx := 1 to inputLength do
+    begin
+        write('idx='); writeln(idx);
+        mostCommonBits := getMostCommonBits(tempBitStrings, tempCount);
+        writeln(mostCommonBits);
 
+        filterByRule(tempBitStrings, tempCount, mostCommonBits, idx);
+        write('tempCount='); writeln(tempCount);
+
+        if tempCount = 1 then
+            break;
+    end;
+    for idx := 1 to inputCount do
+        if tempBitStrings[idx] <> '' then
+        begin
+            finalBitString := tempBitStrings[idx];
+            break;
+        end;
+    writeln(finalBitString);
+    val(concat('%', finalBitString), oxygenGenerationRating, errCode);
+    write('oxygen rating = '); writeln(oxygenGenerationRating); { 509 }
+
+    tempBitStrings := bitStrings;
+    tempCount := inputCount;
+    for idx := 1 to inputLength do
+    begin
+        write('idx='); writeln(idx);
+        leastCommonBits := invertBitString(getMostCommonBits(tempBitStrings, tempCount));
+        writeln(leastCommonBits);
+
+        filterByRule(tempBitStrings, tempCount, leastCommonBits, idx);
+        write('tempCount='); writeln(tempCount);
+
+        if tempCount = 1 then
+            break;
+    end;
+    for idx := 1 to inputCount do
+        if tempBitStrings[idx] <> '' then
+        begin
+            finalBitString := tempBitStrings[idx];
+            break;
+        end;
+    writeln(finalBitString);
+    val(concat('%', finalBitString), co2ScrubberRating, errCode);
+    write('CO2 rating = '); writeln(co2ScrubberRating); { 2693 }
+
+    lifeSupportRating := oxygenGenerationRating * co2ScrubberRating;
+    write('(p2 answer) life support rating = '); writeln(lifeSupportRating); { 1370737 }
 end.
-
