@@ -8,6 +8,7 @@ data class Tile(
 )
 
 class Board(
+    val boardId: Int,
     private val fiveInputLines: List<String>
 )
 {
@@ -57,19 +58,8 @@ class Board(
         return false
     }
 
-    // didn't need this
     fun isWinner(): Boolean {
-        for(i in 0..4) {
-            if(isWinnerInRow(i)) {
-                return true
-            }
-        }
-        for(i in 0..4) {
-            if(isWinnerInColumn(i)) {
-                return true
-            }
-        }
-        return false
+        return isWinner
     }
 
     fun getScore(winningNumber: Int): Int {
@@ -86,12 +76,15 @@ class Board(
 
     override
     fun toString(): String {
-        return yxGrid.map { row ->
+        val name = "boardId=$boardId"
+        val gridString = yxGrid.map { row ->
             row.map { tile ->
                 val tf = if(tile.marked) "t" else "f"
                 "${tile.bingoNum}${tf}"
             }.joinToString(separator = ",")
         }.joinToString(separator = "\n")
+
+        return "$name\n$gridString"
     }
 }
 
@@ -101,29 +94,45 @@ object Puzzle04 {
         val input04Chunks = input04.split("\n\n")
 
         val bingoSequence: List<Int> = input04Chunks[0].split(",").map { Integer.parseInt(it, 10) }
-        val boards: List<Board> = input04Chunks.drop(1).map {
-            val lines = it.split("\n")
-            Board(lines)
+        val boards: List<Board> = input04Chunks.drop(1).mapIndexed { i, chunk ->
+            val lines = chunk.split("\n")
+            Board(i, lines)
         }
 
-        part1(boards, bingoSequence)
-    }
+        var boardsStillInPlay = boards.size
 
-    private fun part1(boards: List<Board>, bingoSequence: List<Int>) {
-        // To guarantee victory against the giant squid, figure out which board will win first.
-        // What will your final score be if you choose that board?
-
-        for(bingoNum in bingoSequence) {
+        for (bingoNum in bingoSequence) {
             println("marking $bingoNum...")
 
-            for(board in boards) {
-                if(board.markAndCheckForWin(bingoNum)) {
-                    val score = board.getScore(winningNumber = bingoNum)
-                    println("winning board:\n$board")
-                    println("(p1 answer) score = $score") // 23177
-                    return
+            val remainingBoards = boards.filter { !it.isWinner() }
+            for (board in remainingBoards) {
+                if (board.markAndCheckForWin(bingoNum)) {
+                    boardsStillInPlay -= 1
+
+                    println("winner:\n$board")
+                    println("$boardsStillInPlay boards remain")
+
+                    //part 1
+                    // To guarantee victory against the giant squid, figure out which board will win first.
+                    // What will your final score be if you choose that board?
+                    if (boardsStillInPlay == boards.size - 1) {
+                        val score = board.getScore(winningNumber = bingoNum)
+                        println("that was the FIRST winning board!")
+                        println("(p1 answer) score = $score") // 23177
+                    }
+
+                    //part 2
+                    // Figure out which board will win last.
+                    // Once it wins, what would its final score be?
+                    if (boardsStillInPlay == 0) {
+                        val score = board.getScore(winningNumber = bingoNum)
+                        println("that was the LAST winning board!")
+                        println("(p2 answer) score = $score") // 6804
+                    }
                 }
             }
         }
+
+        println("all numbers played")
     }
 }
