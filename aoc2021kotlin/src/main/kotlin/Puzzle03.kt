@@ -15,6 +15,7 @@ object Puzzle03 {
         part2(bitStrings)
     }
 
+    /* unused
     private fun _mostCommonBit(bitStrings: List<String>, position: Int): Int {
         var zeroCount = 0;
         var oneCount = 0;
@@ -29,6 +30,7 @@ object Puzzle03 {
             else -> 1 // "If 0 and 1 are equally common, keep values with a 1 in the position being considered."
         }
     }
+    */
 
     private fun getBitFrequency(bitStrings: List<String>): Array<Int> {
         // we can safely assume each bitString is the same length
