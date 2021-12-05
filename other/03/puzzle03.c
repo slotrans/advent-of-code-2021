@@ -19,7 +19,8 @@ typedef struct
     bitstring_list_node_t* tail;
 } bitstring_list_t;
 
-char* bitstring_list_get(bitstring_list_t* list, size_t index)
+
+char* bitstring_list_get(const bitstring_list_t* list, size_t index)
 {
     if(index >= list->size)
     {
@@ -36,6 +37,7 @@ char* bitstring_list_get(bitstring_list_t* list, size_t index)
     return temp->bitstring;
 }
 
+
 bitstring_list_t* bitstring_list_new()
 {
     bitstring_list_t* list = malloc(sizeof(bitstring_list_t));
@@ -45,6 +47,7 @@ bitstring_list_t* bitstring_list_new()
 
     return list;
 }
+
 
 void bitstring_list_delete(bitstring_list_t* list)
 {
@@ -65,7 +68,8 @@ void bitstring_list_delete(bitstring_list_t* list)
     free(list);
 }
 
-void bitstring_list_append(bitstring_list_t* list, char* bitstring)
+
+void bitstring_list_append(bitstring_list_t* const list, const char* bitstring)
 {
     bitstring_list_node_t* tail = list->tail;
 
@@ -90,7 +94,8 @@ void bitstring_list_append(bitstring_list_t* list, char* bitstring)
     }
 }
 
-void bitstring_list_insert(bitstring_list_t* list, char* bitstring, size_t index)
+
+void bitstring_list_insert(bitstring_list_t* const list, const char* bitstring, size_t index)
 {
     if(index >= (list->size)+1)
     {
@@ -130,7 +135,8 @@ void bitstring_list_insert(bitstring_list_t* list, char* bitstring, size_t index
     }
 }
 
-void bitstring_list_remove(bitstring_list_t* list, size_t index)
+
+void bitstring_list_remove(bitstring_list_t* const list, size_t index)
 {
     if(index >= list->size || list->size == 0)
     {
@@ -165,6 +171,22 @@ void bitstring_list_remove(bitstring_list_t* list, size_t index)
         }
     }
     list->size -= 1;
+}
+
+
+bitstring_list_t* bitstring_list_copy(const bitstring_list_t* source_list) // performs a deep copy because of how _append() works
+{
+    bitstring_list_t* dest_list = bitstring_list_new();
+
+    bitstring_list_node_t* temp = source_list->head;
+    while(temp != NULL)
+    {
+        bitstring_list_append(dest_list, temp->bitstring);
+
+        temp = temp->next;
+    }
+
+    return dest_list;
 }
 
 
@@ -221,7 +243,7 @@ void test_list()
     bitstring_list_delete(my_bitstring_list);
 }
 
-void get_most_common_bits(bitstring_list_t* list, char* most_common_bits_out)
+void get_most_common_bits(bitstring_list_t* const list, char* most_common_bits_out)
 {
     int frequencies[BIT_STRING_LENGTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -251,7 +273,7 @@ void get_most_common_bits(bitstring_list_t* list, char* most_common_bits_out)
     }
 }
 
-void invert_bit_string(char* bitstring)
+void invert_bit_string(char* const bitstring)
 {
     size_t input_length = strlen(bitstring);
     for(size_t i = 0; i < input_length; ++i)
@@ -267,11 +289,35 @@ void invert_bit_string(char* bitstring)
     }
 }
 
+void filter_by_rule(bitstring_list_t* const list, const char* bit_rule, size_t bit_pos)
+{
+    size_t index = 0;
+    bitstring_list_node_t* temp = list->head;
+    while(temp != NULL)
+    {
+        bitstring_list_node_t* saved_next = temp->next;
+
+        if(temp->bitstring[bit_pos] != bit_rule[bit_pos])
+        {
+            bitstring_list_remove(list, index);
+        }
+        else
+        {
+            // only advance index if we *didn't* remove the current element
+            ++index;
+        }
+
+        temp = saved_next;
+    }
+}
+
 
 int main()
 {
     printf("reading input...\n");
     bitstring_list_t* input03 = read_input("input03");
+
+    printf("Part 1:\n");
 
     printf("getting most common bits...\n");
     char most_common_bits[] = "____________";
@@ -293,5 +339,52 @@ int main()
     int32_t power_consumption = gamma_rate * epsilon_rate;
     printf("(p1 answer) power consumption = %d\n", power_consumption); // 775304
 
+
+    /* part 2 */
+    printf("\nPart 2:\n");
+
+    bitstring_list_t* temp_bit_strings = bitstring_list_copy(input03);
+    for(size_t i = 0; i < BIT_STRING_LENGTH; ++i)
+    {
+        char mcb[] = "____________";
+        get_most_common_bits(temp_bit_strings, mcb);
+
+        filter_by_rule(temp_bit_strings, mcb, i);
+        if(temp_bit_strings->size == 1)
+        {
+            break;
+        }
+    }
+    //printf("%s\n", temp_bit_strings->head->bitstring);
+    int32_t oxygen_generator_rating = strtol(temp_bit_strings->head->bitstring, NULL, 2);
+    printf("oxygen generator rating = %d\n", oxygen_generator_rating); // 509
+
+
+    bitstring_list_delete(temp_bit_strings);
+    temp_bit_strings = bitstring_list_copy(input03);
+    for(size_t i = 0; i < BIT_STRING_LENGTH; ++i)
+    {
+        char lcb[] = "____________";
+        get_most_common_bits(temp_bit_strings, lcb);
+        invert_bit_string(lcb);
+
+        filter_by_rule(temp_bit_strings, lcb, i);
+        if(temp_bit_strings->size == 1)
+        {
+            break;
+        }
+    }
+    //printf("%s\n", temp_bit_strings->head->bitstring);
+    int32_t co2_scrubber_rating = strtol(temp_bit_strings->head->bitstring, NULL, 2);
+    printf("co2 scrubber rating = %d\n", co2_scrubber_rating); // 2693
+
+    bitstring_list_delete(temp_bit_strings);
+
+    int32_t life_support_rating = oxygen_generator_rating * co2_scrubber_rating;
+    printf("(p2 answer) life support rating = %d\n", life_support_rating); // 1370737
+
+
+    /* clean up and exit */
     bitstring_list_delete(input03);
+    return 0;
 }
