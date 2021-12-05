@@ -74,6 +74,20 @@ std::string invertBitString(std::string bitString)
 }
 
 
+BitStringList_t filterByBitRule(BitStringList_t inBitStrings, std::string bitRule, size_t bitPosition)
+{
+    BitStringList_t outBitStrings;
+    for(size_t i = 0; i < inBitStrings.size(); ++i)
+    {
+        if(inBitStrings[i][bitPosition] == bitRule[bitPosition])
+        {
+            outBitStrings.push_back(inBitStrings[i]);
+        }
+    }
+    return outBitStrings;
+}
+
+
 int main()
 {
     BitStringList_t bitStrings = readInput("input03");
@@ -92,4 +106,37 @@ int main()
 
     int32_t powerConsumption = gammaRate * epsilonRate;
     std::cout << "(p1 answer) power consumption = " << powerConsumption << std::endl; // 775304
+
+    /* part 2 */
+
+    BitStringList_t tempBitStrings = bitStrings;
+    for(size_t i = 0; i < BIT_STRING_LENGTH; ++i)
+    {
+        std::string mostCommonBits = getMostCommonBits(tempBitStrings);
+        tempBitStrings = filterByBitRule(tempBitStrings, mostCommonBits, i);
+        if(tempBitStrings.size() == 1)
+        {
+            break;
+        }
+    }
+    std::cout << tempBitStrings[0] << std::endl;
+    int32_t oxygenGeneratorRating = std::stoi(tempBitStrings[0], nullptr, 2);
+    std::cout << "oxygen generator rating = " << oxygenGeneratorRating << std::endl; // 509
+
+    tempBitStrings = bitStrings; //I hope this a copy!
+    for(size_t i = 0; i < BIT_STRING_LENGTH; ++i)
+    {
+        std::string leastCommonBits = invertBitString(getMostCommonBits(tempBitStrings));
+        tempBitStrings = filterByBitRule(tempBitStrings, leastCommonBits, i);
+        if(tempBitStrings.size() == 1)
+        {
+            break;
+        }
+    }
+    std::cout << tempBitStrings[0] << std::endl;
+    int32_t co2ScrubberRating = std::stoi(tempBitStrings[0], nullptr, 2);
+    std::cout << "co2 scrubber rating = " << co2ScrubberRating << std::endl; // 2693
+
+    int32_t lifeSupportRating = oxygenGeneratorRating * co2ScrubberRating;
+    std::cout << "(p2 answer) life support rating = " << lifeSupportRating << std::endl; // 1370737
 }
