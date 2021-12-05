@@ -1,5 +1,4 @@
 import re
-import sys
 
 
 def mark(board, number) -> None:
@@ -47,16 +46,21 @@ if __name__ == "__main__":
         board_list.append(board)
 
 
-    print("Part 1:")
-
     for bingo_num in bingo_sequence:
         print(f"marking {bingo_num}...")
 
-        for board in board_list:
+        boards_remaining = list(filter(lambda b: not is_winner(b), board_list))
+        for board in boards_remaining:
             mark(board, bingo_num)
-            if is_winner(board):
+            if is_winner(board) and len(boards_remaining) == len(board_list):
                 score = get_score(board=board, winning_number=bingo_num)
                 print("FIRST winning board found!")
                 print(board)
-                print(f"score = {score}") # 23177
-                sys.exit(0)
+                print(f"(p1 answer) score = {score}") # 23177
+            if is_winner(board) and len(boards_remaining) == 1:
+                score = get_score(board=board, winning_number=bingo_num)
+                print("LAST winning board found!")
+                print(board)
+                print(f"(p2 answer) score = {score}") # 6804
+
+    print("bingo numbers exhausted")
