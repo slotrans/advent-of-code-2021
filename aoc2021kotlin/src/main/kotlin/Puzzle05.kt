@@ -95,6 +95,8 @@ object Puzzle05 {
 
         //samplePart1()
         part1(parsedInput)
+        //samplePart2()
+        part2(parsedInput)
     }
 
     private fun parseInput(input: String): List<Line> {
@@ -115,6 +117,8 @@ object Puzzle05 {
     }
 
     private fun part1(lines: List<Line>) {
+        println("Part 1")
+
         val (xSize, ySize) = getGridDimensions(lines)
         val grid = Grid(xSize, ySize)
         for(line in lines) {
@@ -123,6 +127,19 @@ object Puzzle05 {
 
         val p1Answer = grid.count2PlusOverlaps()
         println("(p1 answer) count of 2+: $p1Answer") // 5442
+    }
+
+    private fun part2(lines: List<Line>) {
+        println("Part 2")
+
+        val (xSize, ySize) = getGridDimensions(lines)
+        val grid = Grid(xSize, ySize)
+        for(line in lines) {
+            grid.draw(line, enableDiagonal = true)
+        }
+
+        val p2Answer = grid.count2PlusOverlaps()
+        println("(p2 answer) count of 2+: $p2Answer") // 19571
     }
 
     private fun samplePart1() {
@@ -141,7 +158,23 @@ object Puzzle05 {
         assert(p1Answer == 5)
     }
 
-    val SAMPLE_INPUT = """
+    private fun samplePart2() {
+        val parsedSampleInput = parseInput(SAMPLE_INPUT)
+
+        val (xSize, ySize) = getGridDimensions(parsedSampleInput)
+        val grid = Grid(xSize, ySize)
+        for(line in parsedSampleInput) {
+            grid.draw(line, enableDiagonal = true)
+        }
+        println(grid)
+        assert(grid.toString() == SAMPLE_OUTPUT_P2)
+
+        val p2Answer = grid.count2PlusOverlaps()
+        println("(sample p2 answer) count of 2+: $p2Answer")
+        assert(p2Answer == 12)
+    }
+
+    private val SAMPLE_INPUT = """
         0,9 -> 5,9
         8,0 -> 0,8
         9,4 -> 3,4
@@ -154,7 +187,7 @@ object Puzzle05 {
         5,5 -> 8,2
     """.trimIndent()
 
-    val SAMPLE_OUTPUT_P1 = """
+    private val SAMPLE_OUTPUT_P1 = """
         .......1..
         ..1....1..
         ..1....1..
@@ -164,6 +197,19 @@ object Puzzle05 {
         ..........
         ..........
         ..........
+        222111....
+    """.trimIndent()
+
+    private val SAMPLE_OUTPUT_P2 = """
+        1.1....11.
+        .111...2..
+        ..2.1.111.
+        ...1.2.2..
+        .112313211
+        ...1.2....
+        ..1...1...
+        .1.....1..
+        1.......1.
         222111....
     """.trimIndent()
 }
