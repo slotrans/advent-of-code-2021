@@ -22,36 +22,69 @@ class Line(var x1: Int, var y1: Int, var x2: Int, var y2: Int) {
 }
 
 class Grid(private val xSize: Int, private val ySize: Int) {
-    private val yxgrid: List<List<Int>>;
-
-    init {
-        yxgrid = MutableList(ySize) {
-            MutableList(xSize) { 0 }
-        };
+    private val yxgrid = Array(ySize) {
+        Array(xSize) {
+            0
+        }
     }
 
-    fun draw(line: Line) {
+    private fun interpolatePoints(line: Line): List<Pair<Int, Int>> {
         val xStep = if(line.x2 == line.x1) 0 else
             if(line.x2 > line.x1) 1 else -1
         val yStep = if(line.y2 == line.y1) 0 else
             if(line.y2 > line.y1) 1 else -1
 
-        //WON'T WORK, `step` MUST BE POSITIVE!!!!!
-        for(x in line.x1..line.x2 step xStep) {
-            for(y in line.y1..line.y2 step xStep) {
+        val out = mutableListOf<Pair<Int, Int>>()
+        var x = line.x1
+        var y = line.y1
+        var shouldStop = false
+        while(!shouldStop) {
+            if(x == line.x2 && y == line.y2) {
+                shouldStop = true
+            }
 
+            out.add(Pair(x, y))
+
+            x += xStep
+            y += yStep
+        }
+        return out
+    }
+
+    fun draw(line: Line, enableDiagonal: Boolean = false) {
+        if(!enableDiagonal) {
+            if(!(line.isHorizontal() or line.isVertical())) {
+                return
             }
         }
-        
+
+        for((x, y) in interpolatePoints(line)) {
+            yxgrid[y][x] += 1
+            val idk = yxgrid[y]
+            idk[x]
+        }
+    }
+
+    fun count2PlusOverlaps(): Int {
+        return yxgrid.sumOf { row ->
+            row.count { it >= 2 }
+        }
+
+// alternate:
+//        yxgrid.flatMap { row->
+//            row.map { cell ->
+//                cell
+//            }
+//        }.filter { it >= 2 }.count()
     }
 
     override
     fun toString(): String {
-        return yxgrid.map { row ->
-            row.map { cell ->
-                if(cell == 0) "." else cell.toString()
-            }.joinToString(separator = "")
-        }.joinToString(separator = "\n")
+        return yxgrid.joinToString(separator = "\n") { row ->
+            row.joinToString(separator = "") { cell ->
+                if (cell == 0) "." else cell.toString()
+            }
+        }
     }
 }
 
@@ -60,7 +93,8 @@ object Puzzle05 {
         val input05 = File("${Main.aocRoot}/other/05/input05").readText().trim()
         val parsedInput = parseInput(input05)
 
-        samplePart1()
+        //samplePart1()
+        part1(parsedInput)
     }
 
     private fun parseInput(input: String): List<Line> {
@@ -69,18 +103,42 @@ object Puzzle05 {
         }
     }
 
-    private fun samplePart1() {
-        val parsedSampleInput = parseInput(SAMPLE_INPUT)
-
+    private fun getGridDimensions(lines: List<Line>): Pair<Int, Int> {
         var xMax = 0
         var yMax = 0
-        for(line in parsedSampleInput) {
+        for(line in lines) {
             xMax = maxOf(xMax, line.x1, line.x2)
             yMax = maxOf(yMax, line.y1, line.y2)
         }
 
-        val grid = Grid(xMax+1, yMax+1)
+        return Pair(xMax+1, yMax+1)
+    }
 
+    private fun part1(lines: List<Line>) {
+        val (xSize, ySize) = getGridDimensions(lines)
+        val grid = Grid(xSize, ySize)
+        for(line in lines) {
+            grid.draw(line)
+        }
+
+        val p1Answer = grid.count2PlusOverlaps()
+        println("(p1 answer) count of 2+: $p1Answer") // 5442
+    }
+
+    private fun samplePart1() {
+        val parsedSampleInput = parseInput(SAMPLE_INPUT)
+
+        val (xSize, ySize) = getGridDimensions(parsedSampleInput)
+        val grid = Grid(xSize, ySize)
+        for(line in parsedSampleInput) {
+            grid.draw(line)
+        }
+        println(grid)
+        assert(grid.toString() == SAMPLE_OUTPUT_P1)
+
+        val p1Answer = grid.count2PlusOverlaps()
+        println("(sample p1 answer) count of 2+: $p1Answer")
+        assert(p1Answer == 5)
     }
 
     val SAMPLE_INPUT = """
