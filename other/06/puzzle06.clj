@@ -113,7 +113,7 @@
     (let [ timer-map (frequencies timers)
          , after256 (apply + (vals (nth (iterate better-simulation timer-map) 256)))
          ]
-        (println (str "(p2 answer) fish after 80 days: " after256)) ; 
+        (println (str "(p2 answer) fish after 80 days: " after256)) ; 1644874076764
     )
 )
 
