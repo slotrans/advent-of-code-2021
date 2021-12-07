@@ -1,3 +1,8 @@
+from functools import cache
+import sys
+
+sys.setrecursionlimit(4096)
+
 
 def minimize_fuel_p1(positions):
     min_position = min(positions)
@@ -15,9 +20,17 @@ def minimize_fuel_p1(positions):
     return best_position, best_total_fuel
 
 
+def fuel_usage_p2_slow(x, y):
+    difference = abs(x - y)
+    return sum([i for i in range(0, difference+1)])  # naive, slow way
+
+@cache
 def fuel_usage_p2(x, y):
     difference = abs(x - y)
-    return sum([i for i in range(0, difference+1)])
+    if difference == 1:
+        return 1
+    else:
+        return difference + fuel_usage_p2(0, difference-1)
 
 
 def minimize_fuel_p2(positions):
