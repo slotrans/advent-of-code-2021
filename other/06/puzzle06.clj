@@ -77,7 +77,7 @@
 (defn better-simulation [timer-map]
     (apply
         (partial merge-with +)
-        (for [i [8 7 6 5 4 3 2 1 0]]
+        (for [i [8 7 6 5 4 3 2 1 0]] ; clear than (reverse (range 9)) tbqh
             (let [ft (get timer-map i 0)]
                 (if (= i 0)
                     {8 ft, 6 ft}
