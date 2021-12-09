@@ -6,9 +6,48 @@ object Puzzle08 {
     fun run() {
         val input08 = File("${Main.aocRoot}/other/08/input08").readText().trim()
 
-        samplePart1()
-        part1(input08)
+        //samplePart1()
+        //part1(input08)
+        samplePart2()
     }
+
+    private fun samplePart2() {
+        val smallSampleInput = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf"
+        val signalPatterns = smallSampleInput.split(" | ")[0].split(" ").toSet()
+        val displaySegments = smallSampleInput.split(" | ")[1].split(" ")
+
+        val foo = inferSegmentWiring(signalPatterns, displaySegments)
+    }
+
+    private val correctDigitWirings = arrayOf (
+        "abcefg",  //0
+        "cf",      //1
+        "acdeg",   //2
+        "acdfg",   //3
+        "bcdf",    //4
+        "abdfg",   //5
+        "abdefg",  //6
+        "acf",     //7
+        "abcdefg", //8
+        "abcdfg",  //9
+    )
+
+    private fun inferSegmentWiring(signalPatterns: Set<String>, displaySegments: List<String>): Map<String, Int> {
+        val segmentWiring = mutableMapOf<String, Int>()
+
+        val possibleDigitWirings = mutableMapOf<Int, Set<String>>().withDefault { mutableSetOf() }
+        correctDigitWirings.forEachIndexed { digit, correctPattern ->
+            possibleDigitWirings[digit] = signalPatterns.filter { it.length == correctPattern.length }.toMutableSet()
+        }
+        // 1,4,7,8 will be known at this point
+        println("possible digit wirings: $possibleDigitWirings")
+
+
+
+        return segmentWiring
+    }
+
+
 
     private fun part1(inputAsString: String) {
         println("Part 1")
