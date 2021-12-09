@@ -6,17 +6,51 @@ object Puzzle08 {
     fun run() {
         val input08 = File("${Main.aocRoot}/other/08/input08").readText().trim()
 
-        //samplePart1()
-        //part1(input08)
+        samplePart1()
+        part1(input08)
         samplePart2()
+        part2(input08)
     }
 
     private fun samplePart2() {
-        val smallSampleInput = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf"
-        val signalPatterns = smallSampleInput.split(" | ")[0].split(" ").toSet()
-        val displaySegments = smallSampleInput.split(" | ")[1].split(" ")
+        println("P2 SAMPLE")
+        val signalPatterns = SAMPLE_INPUT_SMALL.split(" | ")[0].split(" ").toSet()
+        val displaySegmentStrings = SAMPLE_INPUT_SMALL.split(" | ")[1].split(" ")
 
-        val foo = inferSegmentWiring(signalPatterns, displaySegments)
+        val segmentWiring = inferSegmentWiring(signalPatterns, displaySegmentStrings)
+        val displayOutput = getDisplayOutput(segmentWiring, displaySegmentStrings)
+        println("(small sample) display: $displayOutput")
+        assert(displayOutput == "5353")
+
+        println("large sample:")
+        var total = 0
+        for(line in SAMPLE_INPUT_LARGE.split("\n")) {
+            val signalPatterns = line.split(" | ")[0].split(" ").toSet()
+            val displaySegmentStrings = line.split(" | ")[1].split(" ")
+
+            val segmentWiring = inferSegmentWiring(signalPatterns, displaySegmentStrings)
+            val displayOutput = getDisplayOutput(segmentWiring, displaySegmentStrings)
+            println("display: $displayOutput")
+            total += displayOutput.toInt()
+        }
+        println("sum of large sample: $total")
+        assert(total == 61229)
+    }
+
+    private fun part2(inputAsString: String) {
+        println("Part 2")
+
+        var total = 0
+        for(line in inputAsString.split("\n")) {
+            val signalPatterns = line.split(" | ")[0].split(" ").toSet()
+            val displaySegmentStrings = line.split(" | ")[1].split(" ")
+
+            val segmentWiring = inferSegmentWiring(signalPatterns, displaySegmentStrings)
+            val displayOutput = getDisplayOutput(segmentWiring, displaySegmentStrings)
+            println("display: $displayOutput")
+            total += displayOutput.toInt()
+        }
+        println("(p2 answer) sum of displays: $total") // 1040429
     }
 
     private val correctDigitWirings = arrayOf (
@@ -32,22 +66,80 @@ object Puzzle08 {
         "abcdfg",  //9
     )
 
+    // for clarity
+    private fun charsOf(s: String): Set<Char> {
+        return s.toSet()
+    }
+
+    // for clarity
+    private fun sortString(s: String): String {
+        return s.toList().sorted().joinToString(separator = "")
+    }
+
     private fun inferSegmentWiring(signalPatterns: Set<String>, displaySegments: List<String>): Map<String, Int> {
-        val segmentWiring = mutableMapOf<String, Int>()
-
-        val possibleDigitWirings = mutableMapOf<Int, Set<String>>().withDefault { mutableSetOf() }
+        // "pdw" = possible digit wirings, need the name to be short
+        val pdw = mutableMapOf<Int, Set<String>>()
         correctDigitWirings.forEachIndexed { digit, correctPattern ->
-            possibleDigitWirings[digit] = signalPatterns.filter { it.length == correctPattern.length }.toMutableSet()
+            pdw[digit] = signalPatterns.filter { it.length == correctPattern.length }.toMutableSet()
         }
-        // 1,4,7,8 will be known at this point
-        println("possible digit wirings: $possibleDigitWirings")
 
+        // 1,4,7,8 are known at this point
+        //println("possible digit wirings: $pdw")
+        //3 includes all elements of 7 -> solves 3
+        pdw[3] = pdw[3]!!.filter {
+            val seven = charsOf(pdw[7]!!.single())
+            charsOf(it).containsAll(seven)
+        }.toSet()
+        //println("possible digit wirings: $pdw")
+        //eliminate 3 from 2 and 5
+        pdw[2] = pdw[2]!!.minus(pdw[3]!!)
+        pdw[5] = pdw[5]!!.minus(pdw[3]!!)
+        //println("possible digit wirings: $pdw")
+        //9 includes all of 4 and 7 -> solves 9
+        pdw[9] = pdw[9]!!.filter {
+            val fourAndSeven = charsOf(pdw[4]!!.single()).union(charsOf(pdw[7]!!.single()))
+            charsOf(it).containsAll(fourAndSeven)
+        }.toSet()
+        //println("possible digit wirings: $pdw")
+        //eliminate 9 from 0 and 6
+        pdw[0] = pdw[0]!!.minus(pdw[9]!!)
+        pdw[6] = pdw[6]!!.minus(pdw[9]!!)
+        //println("possible digit wirings: $pdw")
+        //0 includes all of 7 -> solves 0
+        pdw[0] = pdw[0]!!.filter {
+            val seven = charsOf(pdw[7]!!.single())
+            charsOf(it).containsAll(seven)
+        }.toSet()
+        //println("possible digit wirings: $pdw")
+        //eliminate 0 from 6 -> solves 6
+        pdw[6] = pdw[6]!!.minus(pdw[0]!!)
+        //println("possible digit wirings: $pdw")
+        //5 is a subset of 6 -> solves 5
+        pdw[5] = pdw[5]!!.filter {
+            val six = charsOf(pdw[6]!!.single())
+            six.containsAll(charsOf(it))
+        }.toSet()
+        //println("possible digit wirings: $pdw")
+        //eliminate 5 from 2 -> solves 2
+        pdw[2] = pdw[2]!!.minus(pdw[5]!!)
+        //println("possible digit wirings: $pdw")
 
-
+        //invert the map
+        //sort the segment strings to ease comparisons later
+        val segmentWiring = pdw.entries.associate {
+            val segmentCharsSorted = sortString(it.value.single())
+            val digit = it.key
+            segmentCharsSorted to digit
+        }
+        //println("segment wiring: $segmentWiring")
         return segmentWiring
     }
 
-
+    private fun getDisplayOutput(segmentWiring: Map<String, Int>, displaySegmentStrings: List<String>): String {
+        return displaySegmentStrings.map {
+            segmentWiring[sortString(it)]
+        }.joinToString(separator = "")
+    }
 
     private fun part1(inputAsString: String) {
         println("Part 1")
@@ -71,7 +163,7 @@ object Puzzle08 {
         println("P1 SAMPLE")
 
         val segmentCountTotals = Array(8) { 0 } // 0 index will be unused
-        SAMPLE_INPUT.split("\n").forEach { inputLine ->
+        SAMPLE_INPUT_LARGE.split("\n").forEach { inputLine ->
             val (digitWirings, displaySegments) = inputLine.split(" | ").map { it.split(" ")}
             for(x in displaySegments) {
                 segmentCountTotals[x.length] += 1
@@ -86,7 +178,9 @@ object Puzzle08 {
         assert(p1answer == 26)
     }
 
-    private val SAMPLE_INPUT = """
+    private val SAMPLE_INPUT_SMALL = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf"
+
+    private val SAMPLE_INPUT_LARGE = """
         be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
         edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
         fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
