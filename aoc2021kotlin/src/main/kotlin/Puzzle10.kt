@@ -6,10 +6,39 @@ import java.lang.RuntimeException
 object Puzzle10 {
     fun run() {
         val input10 = File("${Main.aocRoot}/other/10/input10").readText().trim()
+        val inputLines = input10.split("\n")
 
-        val test = "{([(<{}[<>[]}>{[]{[(<()>"
-        println("checking $test...")
-        firstIllegalChar(test)
+        samplePart1()
+        part1(inputLines)
+    }
+
+    private fun part1(inputLines: List<String>) {
+        println("Part 1)")
+
+        var score = 0
+        for(line in inputLines) {
+            println("checking: $line")
+            val illegal = firstIllegalChar(line)
+            if(illegal != null) {
+                score += SCORE_TABLE[illegal]!!
+            }
+        }
+        println("(p1 answer) syntax error score: $score") // 394647
+    }
+
+    private fun samplePart1() {
+        println("P1 SAMPLE")
+
+        var score = 0
+        for(line in SAMPLE_INPUT.split("\n")) {
+            println("checking: $line")
+            val illegal = firstIllegalChar(line)
+            if(illegal != null) {
+                score += SCORE_TABLE[illegal]!!
+            }
+        }
+        println("syntax error score: $score")
+        assert(score == 26397)
     }
 
     private fun firstIllegalChar(navString: String): Char? {
@@ -47,6 +76,13 @@ object Puzzle10 {
         ']' to '[',
         '}' to '{',
         '>' to '<',
+    )
+
+    private val SCORE_TABLE = mapOf(
+        ')' to 3,
+        ']' to 57,
+        '}' to 1197,
+        '>' to 25137,
     )
 
     private val SAMPLE_INPUT = """
