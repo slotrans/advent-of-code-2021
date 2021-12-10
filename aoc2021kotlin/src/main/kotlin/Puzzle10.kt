@@ -1,0 +1,64 @@
+package net.blergh.advent2021
+
+import java.io.File
+import java.lang.RuntimeException
+
+object Puzzle10 {
+    fun run() {
+        val input10 = File("${Main.aocRoot}/other/10/input10").readText().trim()
+
+        val test = "{([(<{}[<>[]}>{[]{[(<()>"
+        println("checking $test...")
+        firstIllegalChar(test)
+    }
+
+    private fun firstIllegalChar(navString: String): Char? {
+        val delimiterStack = mutableListOf<Char>()
+
+        for(c in navString.toCharArray()) {
+            if(c in OPENERS) {
+                delimiterStack.add(c) // push
+            } else if(c in CLOSERS) {
+                val opener = delimiterStack.removeLast() // pop
+                val expectedCloser = MATCHING_DELIMITERS[opener]
+
+                if(c != MATCHING_DELIMITERS[opener]) {
+                    println("expected $expectedCloser, found $c")
+                    return c
+                }
+            } else {
+                throw RuntimeException("unexpected character $c")
+            }
+        }
+
+        return null
+    }
+
+    private val OPENERS = setOf('(', '[', '{', '<')
+
+    private val CLOSERS = setOf(')', ']', '}', '>')
+
+    private val MATCHING_DELIMITERS = mapOf(
+        '(' to ')',
+        '[' to ']',
+        '{' to '}',
+        '<' to '>',
+        ')' to '(',
+        ']' to '[',
+        '}' to '{',
+        '>' to '<',
+    )
+
+    private val SAMPLE_INPUT = """
+        [({(<(())[]>[[{[]{<()<>>
+        [(()[<>])]({[<{<<[]>>(
+        {([(<{}[<>[]}>{[]{[(<()>
+        (((({<>}<{<{<>}{[]{[]{}
+        [[<[([]))<([[{}[[()]]]
+        [{[{({}]{}}([{[{{{}}([]
+        {<[[]]>}<{[{[{[]{()[[[]
+        [<(<(<(<{}))><([]([]()
+        <{([([[(<>()){}]>(<<{{
+        <{([{{}}[<[[[<>{}]]]>[]]
+    """.trimIndent().trim()
+}
