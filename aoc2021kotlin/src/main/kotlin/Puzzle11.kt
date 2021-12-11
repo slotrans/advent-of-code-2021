@@ -20,12 +20,14 @@ class Octopus(var energy: Int) {
         return energy > 9 && !hasFlashed
     }
 
-    fun resetIfNeeded() {
+    fun resetIfNeeded(): Boolean {
         if(hasFlashed) {
             flashes++
             energy = 0
             hasFlashed = false
+            return true
         }
+        return false
     }
 }
 
@@ -61,7 +63,7 @@ class OctopusGrid(val xSize: Int, val ySize: Int) {
         }
     }
 
-    fun stepSimulation() {
+    fun stepSimulation(): Boolean {
         // "First, the energy level of each octopus increases by 1."
         val flashPendingPoints = mutableListOf<Point2>()
         for((point, octopus) in sparseGrid) {
@@ -90,9 +92,13 @@ class OctopusGrid(val xSize: Int, val ySize: Int) {
         }
 
         // "Finally, any octopus that flashed during this step has its energy level set to 0, as it used all of its energy to flash."
-        for(octopus in sparseGrid.values) {
-            octopus.resetIfNeeded()
+        val stepFlashes = sparseGrid.values.map {
+            it.resetIfNeeded()
+        }.count { it == true }
+        if(stepFlashes == sparseGrid.size) { // all octopi flashed
+            return true
         }
+        return false
     }
 
     fun totalFlashes(): Int {
@@ -154,6 +160,15 @@ object Puzzle11 {
         println("Part 1")
         val part1Flashes = part1(input11, 100)
         println("(p1 answer) flashes after 100 steps: $part1Flashes") // 1721
+
+        println("P2 LARGE SAMPLE")
+        val p2SampleFirstSync = part2(largeSampleInput11)
+        println("all flashed at step $p2SampleFirstSync")
+        assert(p2SampleFirstSync == 195)
+
+        println("Part 2")
+        val firstSynchronizedFlash = part2(input11)
+        println("(p2 answer) all octopi flashed at step $firstSynchronizedFlash") // 298
     }
 
     fun part1(inputString: String, steps: Int): Int {
@@ -168,5 +183,18 @@ object Puzzle11 {
         }
 
         return octoGrid.totalFlashes()
+    }
+
+    fun part2(inputString: String): Int {
+        val maxSteps = 1024
+        val octoGrid = OctopusGrid.fromInputString(inputString)
+
+        for(i in 1..maxSteps) {
+            println("simulating step $i...")
+            if(octoGrid.stepSimulation()) {
+                return i
+            }
+        }
+        return -1
     }
 }
