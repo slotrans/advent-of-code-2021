@@ -1,0 +1,55 @@
+(INITIAL) possible digit wirings: {
+0=[cefabd, cdfgeb, cagedb], 
+1=[ab], 
+2=[cdfbe, gcdfa, fbcad], 
+3=[cdfbe, gcdfa, fbcad], 
+4=[eafb], 
+5=[cdfbe, gcdfa, fbcad], 
+6=[cefabd, cdfgeb, cagedb], 
+7=[dab], 
+8=[acedgfb], 
+9=[cefabd, cdfgeb, cagedb],
+}
+
+
+possible digit wirings: {
+0=[cagedb], 
+1=[ab], 
+2=[gcdfa],
+3=[fbcad], 
+4=[eafb], 
+5=[cdfbe], 
+6=[cdfgeb],
+7=[dab], 
+8=[acedgfb], 
+9=[cefabd],
+}
+
+pattern rules:
+3 includes all elements of 7 -> solves 3 to "fbcad"
+eliminate "fbcad" from 2 and 5
+9 includes all of 4 and 7 -> solves to "cefabd"
+eliminates "cefabd" from 0 and 6
+0 includes all of 7 -> solves to "cagedb"
+eliminates "cagedb" from 6 -> solves to "cdfgeb"
+5 is a subset of 6 -> solves to "cdfbe"
+eliminates "cdfbe" from 2 -> solves to "gcdfa"
+
+
+possible correct->broken mappings:
+a: d
+b: 
+c: 
+d: 
+e: 
+f: 
+g:
+
+segment rules:
+a = 7 except 1
+b = 4 except 3
+c = 7 except 6 (or 4 except 5)
+d = 8 except 0
+e = 6 except 5 (or 8 except 9)
+f = 3 except 2
+g = 5 except (4 union 7)
