@@ -1,3 +1,5 @@
+# data-structure-oriented python solution
+
 from collections import namedtuple, defaultdict
 
 
@@ -21,9 +23,9 @@ def get_adjacent_points(point, yxgrid):
     x, y = point.x, point.y
     xmax, ymax = len(yxgrid[0]), len(yxgrid)
     out = []
-    for p in [Point(y-1, x-1), Point(y-1, x), Point(y-1, x+1), 
-              Point(y,   x-1),                Point(y,   x+1), 
-              Point(y+1, x-1), Point(y+1, x), Point(y+1, x+1)]:
+    for p in [Point(x-1, y-1), Point(x, y-1), Point(x+1, y-1), 
+              Point(x-1, y),                  Point(x+1, y), 
+              Point(x-1, y+1), Point(x, y+1), Point(x+1, y+1)]:
         if 0 <= p.x < xmax and 0 <= p.y < ymax:
             out.append(p)
 
@@ -39,7 +41,7 @@ def step_simulation(yxgrid, flash_counters):
             if yxgrid[y][x] > 9:
                 points_to_flash.append(Point(x, y))
 
-    # Then, any octopus with an energy level greater than 9 flashes. 
+    # "Then, any octopus with an energy level greater than 9 flashes."
     flashed_points = set()
     while len(points_to_flash) > 0:
         point = points_to_flash.pop()
@@ -57,9 +59,12 @@ def step_simulation(yxgrid, flash_counters):
     for fp in flashed_points:
         yxgrid[fp.y][fp.x] = 0
         flash_counters[fp] += 1
+    if len(flashed_points) == (len(yxgrid) * len(yxgrid[0])): # all octopi flashed
+        return True
+    return False
 
 
-def part1(input_string, steps): # returns flash count after steps
+def part1(input_string, steps) -> int: # returns flash count after steps
     grid = grid_from_input(input_string)
     counters = defaultdict(lambda: 0)
     for n in range(1,steps+1):
@@ -72,8 +77,28 @@ def part1(input_string, steps): # returns flash count after steps
     return total_flashes
 
 
+def part2(input_string) -> int: # returns step number of the first synchronized flash
+    grid = grid_from_input(input_string)
+    counters = defaultdict(lambda: 0)
+    max_steps = 1024
+    for n in range(1, max_steps+1):
+        print(f"simulating step {n}...")
+        if step_simulation(grid, counters):
+            return n
+
+    return -1
+
+
 if __name__ == "__main__":
     input11 = open("input11", encoding="utf-8").read().strip()
+
+    print("Part 1")
+    part1_flashes = part1(input11, 100)
+    print(f"(p1 answer) flashes after 100 steps: {part1_flashes}") # 1721
+
+    print("Part 2")
+    first_synchronized_flash = part2(input11)
+    print(f"(p2 answer) all octopi flashed at step {first_synchronized_flash}") # 298
 
 
 ###############################################################################
@@ -198,3 +223,8 @@ def test_part1_on_large_sample_10():
 def test_part1_on_large_sample_100():
     flashes = part1(SAMPLE_INPUT_LARGE, 100)
     assert flashes == 1656
+
+
+def test_part2_on_large_sample():
+    first_synchronized_flash = part2(SAMPLE_INPUT_LARGE)
+    assert first_synchronized_flash == 195
