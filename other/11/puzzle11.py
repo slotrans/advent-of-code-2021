@@ -5,7 +5,7 @@ Point = namedtuple("Point", ["x", "y"])
 
 
 def grid_from_input(input_string):
-    # grid cell values are the octopi's energy levelsd
+    # grid cell values are the octopi's energy levels
     return [[int(c) for c in line] for line in input_string.split("\n")]
 
 
