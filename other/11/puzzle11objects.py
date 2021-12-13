@@ -1,3 +1,5 @@
+# object-oriented python solution (copied from Kotlin solution)
+
 from collections import namedtuple
 
 
@@ -270,6 +272,5 @@ def test_part1_on_large_sample_100():
 
 
 def test_part2_on_large_sample():
-    octo_grid = OctopusGrid.from_input_string(SAMPLE_INPUT_LARGE)
     first_synchronized_flash = part2(SAMPLE_INPUT_LARGE)
     assert first_synchronized_flash == 195
