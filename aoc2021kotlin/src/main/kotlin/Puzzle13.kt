@@ -130,7 +130,15 @@ object Puzzle13 {
 
         val afterOneFold = grid.enactFold(instructions[0])
 
-        println("(p1 answer) dots visible after 1 fold: ${afterOneFold.dotCount()}")
+        println("(p1 answer) dots visible after 1 fold: ${afterOneFold.dotCount()}") // 810
+
+
+        var p2grid = grid
+        for(inst in instructions) {
+            p2grid = p2grid.enactFold(inst)
+        }
+        println("(Part 2) after all folds:")
+        println(p2grid) // spells HLBUBGFR
     }
 
     class Puzzle13Test {
