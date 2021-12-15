@@ -22,6 +22,7 @@ class Main {
                 "11" -> Puzzle11.run()
                 "12" -> Puzzle12.run()
                 "13" -> Puzzle13.run()
+                "14" -> Puzzle14.run()
                 else -> {
                     System.err.println("please specify a puzzle solution to run")
                     exitProcess(1)
