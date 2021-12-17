@@ -1,6 +1,7 @@
 package net.blergh.advent2021
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.File
 
@@ -9,13 +10,18 @@ const val LITERAL_TYPE = 4
 const val LENGTH_TYPE = 0
 const val COUNT_TYPE = 1
 
-abstract class Packet(version: Int, typeID: Int)
+abstract class Packet(version: Int, typeID: Int) {
+    abstract fun versionSum(): Int
+}
 
 data class LiteralPacket(
     val version: Int,
-    val literalValue: Int,
+    val literalValue: Long,
 ): Packet(version, LITERAL_TYPE) {
-    //TODO anything needed here?
+    override
+    fun versionSum(): Int {
+        return version
+    }
 }
 
 data class OperatorPacket(
@@ -27,14 +33,21 @@ data class OperatorPacket(
     init {
         assert(typeID != LITERAL_TYPE)
     }
-    //TODO at least a sum-of-subpacket-versions method
+
+    override
+    fun versionSum(): Int {
+        return version + subPackets.sumOf { it.versionSum() }
+    }
 }
 
 object Puzzle16 {
     fun run() {
         val input16 = File("${Main.aocRoot}/other/16/input16").readText().trim()
+        val inputBits = inputHexToBinary(input16)
 
-
+        println("Part 1")
+        val (bitsConsumed, packets) = parseBits(inputBits)
+        println("sum of packet versions = ${packets.first().versionSum()}") //
     }
 
     val HEX_TO_BIN = mapOf(
@@ -63,16 +76,19 @@ object Puzzle16 {
     }
 
     fun binaryToInt(inputBits: List<Char>): Int {
-        return Integer.parseInt(inputBits.joinToString(separator = ""), 2)
+        return inputBits.joinToString(separator = "").toInt(2)
     }
 
+    fun binaryToLong(inputBits: List<Char>): Long {
+        return inputBits.joinToString(separator = "").toLong(2)
+    }
 
     fun parseBits(inputBits: List<Char>, maxPackets: Int = Int.MAX_VALUE): Pair<Int, List<Packet>> { // (bitsConsumed, packets)
         val out = mutableListOf<Packet>()
 
         var idx = 0
         var packetsConsumed = 0
-        while(idx < inputBits.size && packetsConsumed < maxPackets) {
+        while(idx+3 < inputBits.size && packetsConsumed < maxPackets) {
             val version = binaryToInt(inputBits.slice(idx until idx+3))
             idx += 3
 
@@ -106,7 +122,7 @@ object Puzzle16 {
 
                     numberBits.addAll(fourNumberBits)
                 }
-                val literalValue = binaryToInt(numberBits)
+                val literalValue = binaryToLong(numberBits)
                 val packet = LiteralPacket(version, literalValue)
                 out.add(packet)
                 packetsConsumed++
@@ -205,6 +221,7 @@ object Puzzle16 {
             ))
             val (bitsConsumed, packets) = parseBits(inputBits)
             assertEquals(expected, packets.first())
+            assertEquals(16, packets.first().versionSum())
         }
 
         @Test
@@ -213,18 +230,63 @@ object Puzzle16 {
             // two sub-packets; each sub-packet is an operator packet that contains
             // two literal values. This packet has a version sum of 12.
             val inputBits = inputHexToBinary("620080001611562C8802118E34")
-            val expected = OperatorPacket(3, 1, listOf(
-                OperatorPacket(1, 1, listOf(
-                    LiteralPacket(1, 1),
-                    LiteralPacket(1, 1),
+            val expected = OperatorPacket(3, 0, listOf(
+                OperatorPacket(0, 0, listOf(
+                    LiteralPacket(0, 10),
+                    LiteralPacket(5, 11),
                 )),
-                OperatorPacket(1, 1, listOf(
-                    LiteralPacket(1,1),
-                    LiteralPacket(1,1),
+                OperatorPacket(1, 0, listOf(
+                    LiteralPacket(0,12),
+                    LiteralPacket(3,13),
                 )),
             ))
             val (bitsConsumed, packets) = parseBits(inputBits)
             assertEquals(expected, packets.first())
+            assertEquals(12, packets.first().versionSum())
+        }
+
+        @Test
+        fun `operator packet extra example 3`() {
+            //C0015000016115A2E0802F182340 has the same structure as the previous example,
+            // but the outermost packet uses a different length type ID.
+            // This packet has a version sum of 23.
+            val inputBits = inputHexToBinary("C0015000016115A2E0802F182340")
+            val (bitsConsumed, packets) = parseBits(inputBits)
+            val outerPacket = packets.first()
+            assertTrue(outerPacket is OperatorPacket)
+            if(outerPacket is OperatorPacket) {
+                assertTrue(outerPacket.subPackets[0] is OperatorPacket)
+                assertTrue(outerPacket.subPackets[1] is OperatorPacket)
+            }
+            assertEquals(23, outerPacket.versionSum())
+        }
+
+        @Test
+        fun `operator packet extra example 4`() {
+            //A0016C880162017C3686B18A3D4780 is an operator packet that contains
+            // an operator packet that contains
+            // an operator packet that contains
+            // five literal values; it has a version sum of 31.
+            val inputBits = inputHexToBinary("A0016C880162017C3686B18A3D4780")
+            val (bitsConsumed, packets) = parseBits(inputBits)
+            val outerPacket = packets.first()
+            assertTrue(outerPacket is OperatorPacket)
+            if(outerPacket is OperatorPacket) {
+                val innerPacket1 = outerPacket.subPackets[0]
+                assertTrue(innerPacket1 is OperatorPacket)
+                if(innerPacket1 is OperatorPacket) {
+                    val innerPacket2 = innerPacket1.subPackets[0]
+                    assertTrue(innerPacket2 is OperatorPacket)
+                    if(innerPacket2 is OperatorPacket) {
+                        assertTrue(innerPacket2.subPackets[0] is LiteralPacket)
+                        assertTrue(innerPacket2.subPackets[1] is LiteralPacket)
+                        assertTrue(innerPacket2.subPackets[2] is LiteralPacket)
+                        assertTrue(innerPacket2.subPackets[3] is LiteralPacket)
+                        assertTrue(innerPacket2.subPackets[4] is LiteralPacket)
+                    }
+                }
+            }
+            assertEquals(31, outerPacket.versionSum())
         }
     }
 }
