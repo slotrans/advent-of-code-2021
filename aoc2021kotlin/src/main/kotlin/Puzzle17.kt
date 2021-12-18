@@ -99,6 +99,39 @@ object Puzzle17 {
         return globalMaxHeight
     }
 
+    fun findAllHittingVelocities(targetArea: TargetArea, xVelocityRange: IntRange, yVelocityRange: IntRange): Set<Vector2> {
+        val hittingVelocities = mutableSetOf<Vector2>()
+
+        for(xVel in xVelocityRange) {
+            for(yVel in yVelocityRange) {
+                print("firing at velocity ($xVel,$yVel)...")
+                val probe = Probe(Point2(0,0), Vector2(xVel,yVel))
+                while(true) {
+                    probe.step()
+
+                    if(targetArea.isPointInside(probe.position)) {
+                        print("hit!")
+                        hittingVelocities.add(Vector2(xVel, yVel))
+                        break
+                    }
+
+                    if(targetArea.isPointBeyond(probe.position)) {
+                        print("passed the target")
+                        break
+                    }
+
+                    if(probe.position.y < targetArea.yRange.first && probe.velocity.x == 0) {
+                        print("vertical trajectory: fell short or overshot")
+                        break
+                    }
+                }
+                println()
+            }
+        }
+
+        return hittingVelocities
+    }
+
     fun run() {
         val input17 = File("${Main.aocRoot}/other/17/input17").readText().trim()
         val targetArea = TargetArea(input17)
@@ -109,6 +142,12 @@ object Puzzle17 {
         val yVelocityLimit = targetArea.xRange.last  // not a typo
         val highest = findMaxHeight(targetArea, xVelocityLimit, yVelocityLimit)
         println("(p1 answer) greatest height of any hitting trajectory = $highest") // 4186
+
+        println("Part 2")
+        val xVelocityRange = 1..targetArea.xRange.last
+        val yVelocityRange = targetArea.yRange.first..(targetArea.xRange.last*2)
+        val hittingVelocities = findAllHittingVelocities(targetArea, xVelocityRange, yVelocityRange)
+        println("(p2 answer) count of trajectories resulting in hit = ${hittingVelocities.size}") // 2709
     }
 
     /******************************************************************************************************************/
@@ -205,6 +244,127 @@ object Puzzle17 {
             val targetArea = TargetArea(SAMPLE_INPUT)
             val computed = findMaxHeight(targetArea, 20, 20)
             assertEquals(45, computed)
+        }
+
+        @Test
+        fun `all hitting velocities for sample`() {
+            val targetArea = TargetArea(SAMPLE_INPUT)
+            val expected = setOf(
+                Vector2(23,-10),
+                Vector2(25,-9),
+                Vector2(27,-5),
+                Vector2(29,-6),
+                Vector2(22,-6),
+                Vector2(21,-7),
+                Vector2(9,0),
+                Vector2(27,-7),
+                Vector2(24,-5),
+                Vector2(25,-7),
+                Vector2(26,-6),
+                Vector2(25,-5),
+                Vector2(6,8),
+                Vector2(11,-2),
+                Vector2(20,-5),
+                Vector2(29,-10),
+                Vector2(6,3),
+                Vector2(28,-7),
+                Vector2(8,0),
+                Vector2(30,-6),
+                Vector2(29,-8),
+                Vector2(20,-10),
+                Vector2(6,7),
+                Vector2(6,4),
+                Vector2(6,1),
+                Vector2(14,-4),
+                Vector2(21,-6),
+                Vector2(26,-10),
+                Vector2(7,-1),
+                Vector2(7,7),
+                Vector2(8,-1),
+                Vector2(21,-9),
+                Vector2(6,2),
+                Vector2(20,-7),
+                Vector2(30,-10),
+                Vector2(14,-3),
+                Vector2(20,-8),
+                Vector2(13,-2),
+                Vector2(7,3),
+                Vector2(28,-8),
+                Vector2(29,-9),
+                Vector2(15,-3),
+                Vector2(22,-5),
+                Vector2(26,-8),
+                Vector2(25,-8),
+                Vector2(25,-6),
+                Vector2(15,-4),
+                Vector2(9,-2),
+                Vector2(15,-2),
+                Vector2(12,-2),
+                Vector2(28,-9),
+                Vector2(12,-3),
+                Vector2(24,-6),
+                Vector2(23,-7),
+                Vector2(25,-10),
+                Vector2(7,8),
+                Vector2(11,-3),
+                Vector2(26,-7),
+                Vector2(7,1),
+                Vector2(23,-9),
+                Vector2(6,0),
+                Vector2(22,-10),
+                Vector2(27,-6),
+                Vector2(8,1),
+                Vector2(22,-8),
+                Vector2(13,-4),
+                Vector2(7,6),
+                Vector2(28,-6),
+                Vector2(11,-4),
+                Vector2(12,-4),
+                Vector2(26,-9),
+                Vector2(7,4),
+                Vector2(24,-10),
+                Vector2(23,-8),
+                Vector2(30,-8),
+                Vector2(7,0),
+                Vector2(9,-1),
+                Vector2(10,-1),
+                Vector2(26,-5),
+                Vector2(22,-9),
+                Vector2(6,5),
+                Vector2(7,5),
+                Vector2(23,-6),
+                Vector2(28,-10),
+                Vector2(10,-2),
+                Vector2(11,-1),
+                Vector2(20,-9),
+                Vector2(14,-2),
+                Vector2(29,-7),
+                Vector2(13,-3),
+                Vector2(23,-5),
+                Vector2(24,-8),
+                Vector2(27,-9),
+                Vector2(30,-7),
+                Vector2(28,-5),
+                Vector2(21,-10),
+                Vector2(7,9),
+                Vector2(6,6),
+                Vector2(21,-5),
+                Vector2(27,-10),
+                Vector2(7,2),
+                Vector2(30,-9),
+                Vector2(21,-8),
+                Vector2(22,-7),
+                Vector2(24,-9),
+                Vector2(20,-6),
+                Vector2(6,9),
+                Vector2(29,-5),
+                Vector2(8,-2),
+                Vector2(27,-8),
+                Vector2(30,-5),
+                Vector2(24,-7),
+            ) // keep collapsed because long list!
+            val computed = findAllHittingVelocities(targetArea, 1..30, -10..10)
+            assertEquals(expected, computed)
         }
     }
 }
