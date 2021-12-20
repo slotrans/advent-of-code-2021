@@ -121,7 +121,14 @@ object Puzzle14 {
         return totalCounts
     }
 
+    val EXPANSION_CACHE = mutableMapOf<Pair<String, Int>, LongArray>()
+
     fun expandAndCount(letterPair: String, translation: Map<String, Pair<String, String>>, stepsRemaining: Int): LongArray {
+        val cacheKey = Pair(letterPair, stepsRemaining)
+        if(cacheKey in EXPANSION_CACHE) {
+            return EXPANSION_CACHE[cacheKey]!!
+        }
+
         val expanded = translation[letterPair]!!
         if(stepsRemaining == 0) {
             // return count-by-char for the *LEFT HALF ONLY* of the above pair
@@ -131,7 +138,9 @@ object Puzzle14 {
         {
             val firstCounts = expandAndCount(expanded.first, translation,stepsRemaining-1)
             val secondCounts = expandAndCount(expanded.second, translation,stepsRemaining-1)
-            return combineCounts(firstCounts, secondCounts)
+            val out = combineCounts(firstCounts, secondCounts)
+            EXPANSION_CACHE[cacheKey] = out
+            return out
         }
     }
 
@@ -161,12 +170,16 @@ object Puzzle14 {
         val out = LongArray(26) { 0 }
 
         for(c in elementString.toCharArray()) {
-            val idx = c.code - 65 // ascii tricks, 'A' is 65
+            val idx = charIndex(c)
             out[idx] = out[idx] + 1
         }
 
         TO_COUNT_ARRAY_CACHE[elementString] = out
         return out
+    }
+
+    inline fun charIndex(c: Char): Int {
+        return c.code - 65 // ascii tricks, 'A' is 65
     }
 
     fun run() {
@@ -185,7 +198,7 @@ object Puzzle14 {
 
         println("Part 2")
         val p2 = part2(template, translations)
-        println("most common minus least common = $p2") //
+        println("most common minus least common = $p2") // 3353146900153
     }
 
     class Puzzle14Test {
@@ -442,6 +455,26 @@ object Puzzle14 {
             val expected = toCountArray("NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB")
             val computed = countByElement(template, translations, 4)
             assertArrayEquals(expected, computed)
+        }
+
+        @Test
+        fun `countByElement on sample input, steps=10`() {
+            val template = parsePolymerTemplate(SAMPLE_INPUT) // "NNCB"
+            val translations = buildTranslationMap(SAMPLE_INPUT)
+            val computed = countByElement(template, translations, 10)
+            assertEquals(1749, computed[charIndex('B')])
+            assertEquals(298, computed[charIndex('C')])
+            assertEquals(161, computed[charIndex('H')])
+            assertEquals(865, computed[charIndex('N')])
+        }
+
+        @Test
+        fun `countByElement on sample input, steps=40`() {
+            val template = parsePolymerTemplate(SAMPLE_INPUT) // "NNCB"
+            val translations = buildTranslationMap(SAMPLE_INPUT)
+            val computed = countByElement(template, translations, 40)
+            assertEquals(2192039569602, computed[charIndex('B')])
+            assertEquals(3849876073, computed[charIndex('H')])
         }
     }
 }
