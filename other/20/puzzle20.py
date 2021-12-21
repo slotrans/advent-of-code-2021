@@ -75,10 +75,18 @@ if __name__ == "__main__":
     image = sparse_grid_from_lines(input_lines)
     enhanced1 = enhance_image(image, algorithm)
     enhanced2 = enhance_image(enhanced1, algorithm)
-    lit_pixels = Counter(enhanced2.values())["#"]
-    print(f"(p1 answer) lit pixels after 2 enhance passes = {lit_pixels}") # 5354
+    lit_pixels1 = Counter(enhanced2.values())["#"]
+    print(f"(p1 answer) lit pixels after 2 enhance passes = {lit_pixels1}") # 5354
     # 5029, wrong too low
     # 5969, wrong too high
+
+    print("Part 2")
+    enhanced_muchly = image
+    for _ in range(50):
+        enhanced_muchly = enhance_image(enhanced_muchly, algorithm)
+    lit_pixels2 = Counter(enhanced_muchly.values())["#"]
+    print(f"(p2 answer) lit pixels after 50 enhance passes = {lit_pixels2}") # 18269
+    
 
 ###############################################################################
 
@@ -95,7 +103,7 @@ def test_enhance_one_pixel_of_small_sample():
     assert "#" == computed
 
 
-def test_enhance_large_sample():
+def test_enhance_large_sample_2x():
     algorithm = "..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#"
     grid = sparse_grid_from_lines([
         "...............",
@@ -158,5 +166,31 @@ def test_enhance_large_sample():
     for x in range(0,10):
         for y in range(0,10):
             assert expected2[Point(x,y)] == computed2[Point(x,y)]
-    lit_pixel_count = Counter(expected2.values())["#"]
+    lit_pixel_count = Counter(computed2.values())["#"]
     assert 35 == lit_pixel_count
+
+
+def test_enhance_large_sample_50x():
+    algorithm = "..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#"
+    grid = sparse_grid_from_lines([
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+        ".....#..#......",
+        ".....#.........",
+        ".....##..#.....",
+        ".......#.......",
+        ".......###.....",
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+    ])
+    computed = grid
+    for _ in range(50):
+        computed = enhance_image(computed, algorithm)
+    lit_pixel_count = Counter(computed.values())["#"]
+    assert 3351 == lit_pixel_count
