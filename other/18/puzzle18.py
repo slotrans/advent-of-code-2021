@@ -136,13 +136,47 @@ def sf_magnitude(sf) -> int:
     elif sf[0] == "]":
         raise Exception("unexpected ]")
     elif sf[0] == ",":
-        #will we ever encounter this?
+        raise Exception("unexpected ,")
     else:
-        #numbers
+        num_string = sf[0]
+        for i in range(1,len(sf)):
+            if sf[i].isdigit():
+                num_string += sf[i]
+            else:
+                break
+
+        return int(num_string)
+
+
+def sf_list_magnitude(sf_list):
+    acc = sf_list[0]
+    for sf in sf_list[1:]:
+        acc = sf_add_with_reduction(acc, sf)
+    return sf_magnitude(acc)    
+
+
+def sf_max_pair_magnitude(sf_list):
+    max_magnitude = 0
+    for i in range(len(sf_list)):
+        for j in range(len(sf_list)):
+            if i == j:
+                continue
+            magnitude = sf_magnitude(sf_add_with_reduction(sf_list[i], sf_list[j]))
+            max_magnitude = max(max_magnitude, magnitude)
+    return max_magnitude
 
 
 if __name__ == "__main__":
     input18 = open("input18", encoding="utf-8").read().strip()
+
+    print("Part 1")
+    input_lines = input18.split("\n")
+    magnitude_of_input = sf_list_magnitude(input_lines)
+    print(f"(p1 answer) magnitude of all input added = {magnitude_of_input}") # 3734
+
+    print("Part 2")
+    max_pair_magnitude = sf_max_pair_magnitude(input_lines)
+    print(f"(p2 answer) max magnitude from adding two numbers = {max_pair_magnitude}") # 4837
 
 
 ###############################################################################
@@ -267,3 +301,75 @@ def test_adding_example_4():
     ]:
         acc = sf_add_with_reduction(acc, x)
     assert acc == "[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]"
+
+
+def test_magnitude_1():
+    expected = 129
+    computed = sf_magnitude("[[9,1],[1,9]]")
+    assert computed == expected
+
+def test_magnitude_2():
+    expected = 143
+    computed = sf_magnitude("[[1,2],[[3,4],5]]")
+    assert expected == computed
+
+def test_magnitude_3():    
+    expected = 1384
+    computed = sf_magnitude("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]")
+    assert expected == computed
+
+def test_magnitude_4():    
+    expected = 445
+    computed = sf_magnitude("[[[[1,1],[2,2]],[3,3]],[4,4]]")
+    assert expected == computed
+
+def test_magnitude_5():    
+    expected = 791
+    computed = sf_magnitude("[[[[3,0],[5,3]],[4,4]],[5,5]]")
+    assert expected == computed
+
+def test_magnitude_6():    
+    expected = 1137
+    computed = sf_magnitude("[[[[5,0],[7,4]],[5,5]],[6,6]]")
+    assert expected == computed
+
+def test_magnitude_7():    
+    expected = 3488
+    computed = sf_magnitude("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]")
+    assert expected == computed
+
+
+def test_magnitude_of_list(): # part 1
+    input_list = [
+        "[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]",
+        "[[[5,[2,8]],4],[5,[[9,9],0]]]",
+        "[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]",
+        "[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]",
+        "[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]",
+        "[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]",
+        "[[[[5,4],[7,7]],8],[[8,3],8]]",
+        "[[9,3],[[9,9],[6,[4,9]]]]",
+        "[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]",
+        "[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]",
+    ]
+    expected = 4140
+    computed = sf_list_magnitude(input_list)
+    assert expected == computed
+
+
+def test_max_magnitude_of_pair(): # part 2
+    input_list = [
+        "[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]",
+        "[[[5,[2,8]],4],[5,[[9,9],0]]]",
+        "[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]",
+        "[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]",
+        "[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]",
+        "[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]",
+        "[[[[5,4],[7,7]],8],[[8,3],8]]",
+        "[[9,3],[[9,9],[6,[4,9]]]]",
+        "[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]",
+        "[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]",
+    ]
+    expected = 3993
+    computed = sf_max_pair_magnitude(input_list)
+    assert expected == computed
