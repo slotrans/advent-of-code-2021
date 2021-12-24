@@ -31,6 +31,13 @@ class Instruction:
                 grid[Point2(x, y)] = self.on_or_off
         return grid
 
+    @cached_property
+    def z_line(self):
+        line = set()
+        for z in range(self.z_min, self.z_max+1):
+            line.add(z)
+        return line
+
 
 def instructions_from_input(input_string) -> list[Instruction]:
     out = []
@@ -64,7 +71,7 @@ def initialize_grid(instructions: list[Instruction]) -> dict: # {Point3: int}
     return grid
 
 
-def count_after_initialize(instructions: list[Instruction]) -> int:
+def count_after_initialize_planar(instructions: list[Instruction]) -> int:
     instructions = list(filter(lambda i: i.is_within_init_region, instructions))
     overall_z_min = min([i.z_min for i in instructions if i.is_within_init_region])
     overall_z_max = max([i.z_max for i in instructions if i.is_within_init_region])
@@ -84,7 +91,7 @@ def count_after_initialize(instructions: list[Instruction]) -> int:
     return on_count
 
 
-def count_after_reboot(instructions: list[Instruction]) -> int:
+def count_after_reboot_planar(instructions: list[Instruction]) -> int:
     overall_z_min = min([i.z_min for i in instructions])
     overall_z_max = max([i.z_max for i in instructions])
 
@@ -93,12 +100,34 @@ def count_after_reboot(instructions: list[Instruction]) -> int:
         print(f"z={z}")
         grid = {}
         for inst in instructions:
-            if not inst.z_min <= z <= inst.z_max:
-                continue
-
-            grid.update(inst.xy_grid)
+            if inst.z_min <= z <= inst.z_max:
+                grid.update(inst.xy_grid)
 
         on_count += sum(grid.values())
+
+    return on_count
+
+
+def count_after_reboot_linear(instructions: list[Instruction]) -> int:
+    overall_x_min = min([i.x_min for i in instructions])
+    overall_x_max = max([i.x_max for i in instructions])
+    overall_y_min = min([i.y_min for i in instructions])
+    overall_y_max = max([i.y_max for i in instructions])
+
+    on_count = 0
+    for x in range(overall_x_min, overall_x_max+1):
+        print(f"x={x} | on_count={on_count}")
+        for y in range(overall_y_min, overall_y_max+1):
+            #print(f"(x={x}, y={y}) on_count={on_count}")
+            line = set()
+            for inst in instructions:
+                if (inst.x_min <= x <= inst.x_max and inst.y_min <= y <= inst.y_max):
+                    if inst.on_or_off == 1:
+                        line.update(inst.z_line)
+                    else:
+                        line.difference_update(inst.z_line)
+
+            on_count += len(line)
 
     return on_count
 
@@ -110,12 +139,12 @@ if __name__ == "__main__":
     instructions = instructions_from_input(input22)
     #grid = initialize_grid(instructions)
     #on_after_init = sum(grid.values())
-    on_after_init = count_after_initialize(instructions)
+    on_after_init = count_after_initialize_planar(instructions)
     print(f"(p1 answer) cubes on after initialization = {on_after_init}") # 577205
 
 
     print("Part 2")
-    on_after_reboot = count_after_reboot(instructions)
+    on_after_reboot = count_after_reboot_linear(instructions)
     print(f"(p2 answer) cubes on after reboot = {on_after_reboot}") #
 
 
@@ -240,25 +269,30 @@ def test_initialize_grid_large_sample():
     assert 590784 == sum(grid.values())
 
 
-def test_count_after_initialize_small_sample():
+def test_count_after_initialize_planar_small_sample():
     instructions = instructions_from_input(SAMPLE_INPUT_SMALL)
-    on_count = count_after_initialize(instructions)
+    on_count = count_after_initialize_planar(instructions)
     assert 39 == on_count
 
 
-def test_count_after_initialize_large_sample():
+def test_count_after_initialize_planar_large_sample():
     instructions = instructions_from_input(SAMPLE_INPUT_LARGE)
-    on_count = count_after_initialize(instructions)
+    on_count = count_after_initialize_planar(instructions)
     assert 590784 == on_count
 
 
-def test_count_after_initialize_p2_sample():
+def test_count_after_initialize_planar_p2_sample():
     instructions = instructions_from_input(SAMPLE_INPUT_P2)
-    on_count = count_after_initialize(instructions)
+    on_count = count_after_initialize_planar(instructions)
     assert 474140 == on_count
 
 
-def test_count_after_reboot_p2_sample():
+#def test_count_after_reboot_planar_p2_sample():
+#    instructions = instructions_from_input(SAMPLE_INPUT_P2)
+#    on_count = count_after_reboot_planar(instructions)
+#    assert 2758514936282235 == on_count
+
+def test_count_after_reboot_linear_p2_sample():
     instructions = instructions_from_input(SAMPLE_INPUT_P2)
-    on_count = count_after_reboot(instructions)
-    assert 2758514936282235 ==  on_count
+    on_count = count_after_reboot_linear(instructions)
+    assert 2758514936282235 == on_count
