@@ -132,6 +132,50 @@ def count_after_reboot_linear(instructions: list[Instruction]) -> int:
     return on_count
 
 
+def apply_instruction_to_z_range(on_range: list[tuple[int, int]], instruction: Instruction) -> None: # mutates on_range
+    if len(on_range) == 0:
+        if instruction.on_or_off == 1:
+            on_range.append((instruction.z_min, instruction.z_max))
+        else:
+            # not relevant in practice since first instruction is always "on"
+            return
+
+    z_range = (instruction.z_min, instruction.z_max)
+
+    if instruction.on_or_off == 1:
+        overlapped_any_subrange = False
+        for i in range(len(on_range)):
+            subrange = on_range[i]
+            if z_range[0] <= subrange[0] and z_range[1] >= subrange[1]:
+                # input range is at least as large -> replace current
+                on_range[i] = z_range
+                overlapped_any_subrange = True
+            elif z_range[0] >= subrange[0] and z_range[1] <= subrange[1]:
+                # lies entirely within -> do nothing & stop checking
+                return
+            elif subrange[0] <= z_range[0] <= subrange[1] or subrange[0] <= z_range[1] <= subrange[1]:
+                # one end lies within -> extend
+                on_range[i] = (min(subrange[0], z_range[0]), max(subrange[1], z_range[1]))
+                overlapped_any_subrange = True
+
+        if not overlapped_any_subrange:
+            on_range.append(z_range)
+
+    else: # off
+        subranges_to_remove = []
+        for i in range(len(on_range)):
+            subrange = on_range[i]
+            if z_range[0] <= subrange[0] and z_range[1] >= subrange[1]:
+                # input range is at least as large -> delete
+                subranges_to_remove.append(i)
+            elif 
+
+
+    # TODO: sort
+
+    # TODO: reduce
+
+
 if __name__ == "__main__":
     input22 = open("input22", encoding="utf-8").read().strip()
 
