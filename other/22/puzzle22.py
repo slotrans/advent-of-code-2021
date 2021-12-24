@@ -1,11 +1,16 @@
 from dataclasses import dataclass
+from collections import namedtuple
+from functools import cached_property
 
 
-@dataclass(frozen=True)
-class Point3:
-    x: int
-    y: int
-    z: int
+#@dataclass(frozen=True)
+#class Point3:
+#    x: int
+#    y: int
+#    z: int
+Point3 = namedtuple("Point3", ["x", "y", "z"])
+Point2 = namedtuple("Point2", ["x", "y"])
+
 
 @dataclass(frozen=True)
 class Instruction:
@@ -17,6 +22,14 @@ class Instruction:
     z_min: int
     z_max: int
     is_within_init_region: bool
+
+    @cached_property
+    def xy_grid(self):
+        grid = {}
+        for x in range(self.x_min, self.x_max+1):
+            for y in range(self.y_min, self.y_max+1):
+                grid[Point2(x, y)] = self.on_or_off
+        return grid
 
 
 def instructions_from_input(input_string) -> list[Instruction]:
@@ -51,14 +64,59 @@ def initialize_grid(instructions: list[Instruction]) -> dict: # {Point3: int}
     return grid
 
 
+def count_after_initialize(instructions: list[Instruction]) -> int:
+    instructions = list(filter(lambda i: i.is_within_init_region, instructions))
+    overall_z_min = min([i.z_min for i in instructions if i.is_within_init_region])
+    overall_z_max = max([i.z_max for i in instructions if i.is_within_init_region])
+
+    on_count = 0
+    for z in range(overall_z_min, overall_z_max+1):
+        print(f"z={z}")
+        grid = {}
+        for inst in instructions:
+            if not inst.z_min <= z <= inst.z_max:
+                continue
+
+            grid.update(inst.xy_grid)
+
+        on_count += sum(grid.values())
+
+    return on_count
+
+
+def count_after_reboot(instructions: list[Instruction]) -> int:
+    overall_z_min = min([i.z_min for i in instructions])
+    overall_z_max = max([i.z_max for i in instructions])
+
+    on_count = 0
+    for z in range(overall_z_min, overall_z_max+1):
+        print(f"z={z}")
+        grid = {}
+        for inst in instructions:
+            if not inst.z_min <= z <= inst.z_max:
+                continue
+
+            grid.update(inst.xy_grid)
+
+        on_count += sum(grid.values())
+
+    return on_count
+
+
 if __name__ == "__main__":
     input22 = open("input22", encoding="utf-8").read().strip()
 
     print("Part 1")
     instructions = instructions_from_input(input22)
-    grid = initialize_grid(instructions)
-    on_after_init = sum(grid.values())
+    #grid = initialize_grid(instructions)
+    #on_after_init = sum(grid.values())
+    on_after_init = count_after_initialize(instructions)
     print(f"(p1 answer) cubes on after initialization = {on_after_init}") # 577205
+
+
+    print("Part 2")
+    on_after_reboot = count_after_reboot(instructions)
+    print(f"(p2 answer) cubes on after reboot = {on_after_reboot}") #
 
 
 ###############################################################################
@@ -180,3 +238,27 @@ def test_initialize_grid_large_sample():
     instructions = instructions_from_input(SAMPLE_INPUT_LARGE)
     grid = initialize_grid(instructions)
     assert 590784 == sum(grid.values())
+
+
+def test_count_after_initialize_small_sample():
+    instructions = instructions_from_input(SAMPLE_INPUT_SMALL)
+    on_count = count_after_initialize(instructions)
+    assert 39 == on_count
+
+
+def test_count_after_initialize_large_sample():
+    instructions = instructions_from_input(SAMPLE_INPUT_LARGE)
+    on_count = count_after_initialize(instructions)
+    assert 590784 == on_count
+
+
+def test_count_after_initialize_p2_sample():
+    instructions = instructions_from_input(SAMPLE_INPUT_P2)
+    on_count = count_after_initialize(instructions)
+    assert 474140 == on_count
+
+
+def test_count_after_reboot_p2_sample():
+    instructions = instructions_from_input(SAMPLE_INPUT_P2)
+    on_count = count_after_reboot(instructions)
+    assert 2758514936282235 ==  on_count
