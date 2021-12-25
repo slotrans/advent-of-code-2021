@@ -165,15 +165,44 @@ def apply_instruction_to_z_range(on_range: list[tuple[int, int]], instruction: I
         subranges_to_remove = []
         for i in range(len(on_range)):
             subrange = on_range[i]
-            if z_range[0] <= subrange[0] and z_range[1] >= subrange[1]:
+            if z_range[1] < subrange[0] or z_range[0] > subrange[1]:
+                # no overlap -> do nothing
+                pass
+            elif z_range[0] <= subrange[0] and z_range[1] >= subrange[1]:
                 # input range is at least as large -> delete
                 subranges_to_remove.append(i)
-            elif 
+            elif z_range[0] > subrange[0] and z_range[1] < subrange[1]:
+                # lies entirely within -> split
+                subranges_to_remove.append(i)
+                on_range.append((subrange[0], z_range[0]-1))
+                on_range.append((z_range[1]+1, subrange[1]))
+            elif z_range[0] <= subrange[0] and subrange[0] < z_range[1] < subrange[1]:
+                # input overlaps left endpoint of this range -> shrink
+                on_range[i] = (z_range[1]+1, subrange[1])
+            elif subrange[0] < z_range[0] < subrange[1] and z_range[1] >= subrange[1]:
+                # input overlaps right endpoint of this range -> shrink
+                on_range[i] = (subrange[0], z_range[0]-1)
+            else:
+                raise Exception("unhandled scenario in OFF case!")
 
+        shift = 0
+        for i in subranges_to_remove:
+            on_range.pop(i-shift)
+            shift += 1
 
-    # TODO: sort
+    on_range.sort()
 
-    # TODO: reduce
+    # reduce by consolidating overlapping ranges
+    should_continue = True
+    while(should_continue):
+        should_continue = False
+        for i in range(0, len(on_range)-1):
+            this_one, next_one = on_range[i], on_range[i+1]
+            if this_one[1] >= next_one[0]:
+                on_range[i+1] = (this_one[0], next_one[1])
+                on_range.pop(0)
+                should_continue = True
+                break
 
 
 if __name__ == "__main__":
@@ -336,7 +365,127 @@ def test_count_after_initialize_planar_p2_sample():
 #    on_count = count_after_reboot_planar(instructions)
 #    assert 2758514936282235 == on_count
 
-def test_count_after_reboot_linear_p2_sample():
+#def test_count_after_reboot_linear_p2_sample():
+#    instructions = instructions_from_input(SAMPLE_INPUT_P2)
+#    on_count = count_after_reboot_linear(instructions)
+#    assert 2758514936282235 == on_count
+
+
+def test_apply_instruction_to_z_range_small_sample():
+    on_range = []
+    inst_a = Instruction(1, 10, 12, 10, 12, 10, 12, True)
+    inst_b = Instruction(1, 11, 13, 11, 13, 11, 13, True)
+    inst_c = Instruction(0, 9, 11, 9, 11, 9, 11, True)
+    inst_d = Instruction(1, 10, 10, 10, 10, 10, 10, True)
+
+    apply_instruction_to_z_range(on_range, inst_a)
+    assert on_range == [(10,12)]
+
+    apply_instruction_to_z_range(on_range, inst_b)
+    assert on_range == [(10,13)]
+
+    apply_instruction_to_z_range(on_range, inst_c)
+    assert on_range == [(12,13)]
+
+    apply_instruction_to_z_range(on_range, inst_d)
+    assert on_range == [(10,10), (12,13)]
+
+
+def test_apply_instruction_to_z_range_large_sample():
+    instructions = instructions_from_input(SAMPLE_INPUT_LARGE)
+    on_range = []
+
+    apply_instruction_to_z_range(on_range, instructions[0]) # z=-47..7
+    assert on_range == [(-47,7)]
+
+    apply_instruction_to_z_range(on_range, instructions[1]) # z=-26..28
+    assert on_range == [(-47,28)]
+
+    apply_instruction_to_z_range(on_range, instructions[2]) # z=-38..16
+    assert on_range == [(-47,28)]
+
+    apply_instruction_to_z_range(on_range, instructions[3]) # z=-50..-1
+    assert on_range == [(-50,28)]
+
+    apply_instruction_to_z_range(on_range, instructions[4]) # z=-24..28
+    assert on_range == [(-50,28)]
+
+    apply_instruction_to_z_range(on_range, instructions[5]) # z=-23..27
+    assert on_range == [(-50,28)]
+
+    apply_instruction_to_z_range(on_range, instructions[6]) # z=-21..29
+    assert on_range == [(-50,29)]
+
+    apply_instruction_to_z_range(on_range, instructions[7]) # z=-3..44
+    assert on_range == [(-50,44)]
+
+    apply_instruction_to_z_range(on_range, instructions[8]) # z=-13..34
+    assert on_range == [(-50,44)]
+
+    apply_instruction_to_z_range(on_range, instructions[9]) # z=-29..19
+    assert on_range == [(-50,44)]
+
+    apply_instruction_to_z_range(on_range, instructions[10]) # z=-47..-37 OFF
+    assert on_range == [(-50,-48), (-36,44)]
+
+    apply_instruction_to_z_range(on_range, instructions[11]) # z=-50..-2
+    assert on_range == [(-50,44)]
+
+    apply_instruction_to_z_range(on_range, instructions[12]) # z=-15..-5 OFF
+    assert on_range == [(-50,-16), (-4,44)]
+
+    apply_instruction_to_z_range(on_range, instructions[13]) # z=-7..46
+    assert on_range == [(-50,-16), (-7,46)]
+
+    apply_instruction_to_z_range(on_range, instructions[14]) # z=23..41 OFF
+    assert on_range == [(-50,-16), (-7,22), (42,46)]
+
+    apply_instruction_to_z_range(on_range, instructions[15]) # z=-47..6
+    assert on_range == [(-50,22), (42,46)]
+
+    apply_instruction_to_z_range(on_range, instructions[16]) # z=-14..3 OFF
+    assert on_range == [(-50,-15), (4,22), (42,46)]
+
+    apply_instruction_to_z_range(on_range, instructions[17]) # z=-29..18
+    assert on_range == [(-50,22), (42,46)]
+
+    apply_instruction_to_z_range(on_range, instructions[18]) # z=-3..13 OFF
+    assert on_range == [(-50,-4), (14,22), (42,46)]
+
+    apply_instruction_to_z_range(on_range, instructions[19]) # z=-33..15
+    assert on_range == [(-50,22), (42,46)]
+
+
+def test_apply_instruction_to_z_range_p2_sample():
     instructions = instructions_from_input(SAMPLE_INPUT_P2)
-    on_count = count_after_reboot_linear(instructions)
-    assert 2758514936282235 == on_count
+    on_range = []
+
+    apply_instruction_to_z_range(on_range, instructions[0]) # z=-19..33
+    assert on_range == [(-19,33)]
+
+    apply_instruction_to_z_range(on_range, instructions[1]) # z=-14..35
+    assert on_range == [(-19,35)]
+
+    apply_instruction_to_z_range(on_range, instructions[2]) # z=-10..38
+    assert on_range == [(-19,38)]
+
+    apply_instruction_to_z_range(on_range, instructions[3]) # z=-44..1
+    assert on_range == [(-44,38)]
+
+    apply_instruction_to_z_range(on_range, instructions[4]) # z=-2..11 OFF
+    assert on_range == [(-44,-3), (12,38)]
+
+    apply_instruction_to_z_range(on_range, instructions[5]) # z=-36..8
+    assert on_range == [(-44,8), (12,38)]
+
+    apply_instruction_to_z_range(on_range, instructions[6]) # z=7..25 OFF
+    assert on_range == [(-44,6), (26,38)]
+
+    apply_instruction_to_z_range(on_range, instructions[7]) # z=-34..11
+    assert on_range == [(-44,11), (26,38)]
+
+    apply_instruction_to_z_range(on_range, instructions[8]) # z=-11..5 OFF
+    assert on_range == [(-44,-12), (6,11), (26,38)]
+
+    apply_instruction_to_z_range(on_range, instructions[9]) # z=-16..29
+    assert on_range == [(-44,38)]
