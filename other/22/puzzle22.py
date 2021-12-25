@@ -132,6 +132,30 @@ def count_after_reboot_linear(instructions: list[Instruction]) -> int:
     return on_count
 
 
+def count_after_reboot_with_ranges(instructions: list[Instruction]) -> int:
+    overall_x_min = min([i.x_min for i in instructions])
+    overall_x_max = max([i.x_max for i in instructions])
+    overall_y_min = min([i.y_min for i in instructions])
+    overall_y_max = max([i.y_max for i in instructions])
+
+    on_count = 0
+    for x in range(overall_x_min, overall_x_max+1):
+        print(f"x={x} | on_count={on_count}")
+        for y in range(overall_y_min, overall_y_max+1):
+            line_on_range = []
+            for inst in instructions:
+                if (inst.x_min <= x <= inst.x_max and inst.y_min <= y <= inst.y_max):
+                    apply_instruction_to_z_range(line_on_range, inst)
+
+            on_count += sum_on_range(line_on_range)
+
+    return on_count
+
+
+def sum_on_range(on_range: list[tuple[int, int]]) -> int:
+    return sum([r[1]-r[0]+1 for r in on_range])
+
+
 def apply_instruction_to_z_range(on_range: list[tuple[int, int]], instruction: Instruction) -> None: # mutates on_range
     if len(on_range) == 0:
         if instruction.on_or_off == 1:
@@ -489,3 +513,9 @@ def test_apply_instruction_to_z_range_p2_sample():
 
     apply_instruction_to_z_range(on_range, instructions[9]) # z=-16..29
     assert on_range == [(-44,38)]
+
+
+def test_count_after_reboot_with_ranges_p2_sample():
+    instructions = instructions_from_input(SAMPLE_INPUT_P2)
+    on_count = count_after_reboot_with_ranges(instructions)
+    assert 2758514936282235 == on_count
